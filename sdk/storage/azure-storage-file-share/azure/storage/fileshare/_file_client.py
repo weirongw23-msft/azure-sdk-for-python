@@ -1502,7 +1502,7 @@ class ShareFileClient(StorageAccountHostsMixin):
             The snapshot diff parameter that contains an opaque DateTime value that
             specifies a previous file snapshot to be compared
             against a more recent snapshot or the current file.
-        :keyword Optional[bool] include_renames:
+        :param Optional[bool] include_renames:
             Only valid if previous_sharesnapshot parameter is provided. Specifies whether the changed ranges for
             a file that has been renamed or moved between the target snapshot (or live file) and the previous
             snapshot should be listed. If set to True, the valid changed ranges for the file will be returned.
