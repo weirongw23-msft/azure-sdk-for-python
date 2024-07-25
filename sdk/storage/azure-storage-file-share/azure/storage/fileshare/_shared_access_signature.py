@@ -42,11 +42,23 @@ class FileSharedAccessSignature(SharedAccessSignature):
         '''
         super(FileSharedAccessSignature, self).__init__(account_name, account_key, x_ms_version=X_MS_VERSION)
 
-    def generate_file(self, share_name, directory_name=None, file_name=None,
-                      permission=None, expiry=None, start=None, policy_id=None,
-                      ip=None, protocol=None, cache_control=None,
-                      content_disposition=None, content_encoding=None,
-                      content_language=None, content_type=None, return_sts=False):
+    def generate_file(
+        self, share_name,
+        directory_name=None,
+        file_name=None,
+        permission=None,
+        expiry=None,
+        start=None,
+        policy_id=None,
+        ip=None,
+        protocol=None,
+        cache_control=None,
+        content_disposition=None,
+        content_encoding=None,
+        content_language=None,
+        content_type=None,
+        return_sts=False
+    ):
         '''
         Generates a shared access signature for the file.
         Use the returned signature with the sas_token parameter of FileService.
@@ -109,7 +121,7 @@ class FileSharedAccessSignature(SharedAccessSignature):
             Response header value for Content-Type when resource is accessed
             using this shared access signature.
         :param bool return_sts:
-            If set to True, returns a string to sign. The default value is False.
+            For debugging purposes only. If set to True, returns the string to sign instead of the SAS.
         :returns: The generated SAS token for the account.
         :rtype: str
         '''
@@ -125,15 +137,25 @@ class FileSharedAccessSignature(SharedAccessSignature):
         sas.add_override_response_headers(cache_control, content_disposition,
                                           content_encoding, content_language,
                                           content_type)
-        string_to_sign = sas.add_resource_signature(self.account_name, self.account_key, resource_path)
+        sas.add_resource_signature(self.account_name, self.account_key, resource_path)
 
-        return string_to_sign if return_sts else sas.get_token()
+        return sas.string_to_sign if return_sts else sas.get_token()
 
-    def generate_share(self, share_name, permission=None, expiry=None,
-                       start=None, policy_id=None, ip=None, protocol=None,
-                       cache_control=None, content_disposition=None,
-                       content_encoding=None, content_language=None,
-                       content_type=None, return_sts=False):
+    def generate_share(
+        self, share_name,
+        permission=None,
+        expiry=None,
+        start=None,
+        policy_id=None,
+        ip=None,
+        protocol=None,
+        cache_control=None,
+        content_disposition=None,
+        content_encoding=None,
+        content_language=None,
+        content_type=None,
+        return_sts=False
+    ):
         '''
         Generates a shared access signature for the share.
         Use the returned signature with the sas_token parameter of FileService.
@@ -191,7 +213,7 @@ class FileSharedAccessSignature(SharedAccessSignature):
             Response header value for Content-Type when resource is accessed
             using this shared access signature.
         :param bool return_sts:
-            If set to True, returns a string to sign. The default value is False.
+            For debugging purposes only. If set to True, returns the string to sign instead of the SAS.
         :returns: The generated SAS token for the account.
         :rtype: str
         '''
@@ -202,9 +224,9 @@ class FileSharedAccessSignature(SharedAccessSignature):
         sas.add_override_response_headers(cache_control, content_disposition,
                                           content_encoding, content_language,
                                           content_type)
-        string_to_sign = sas.add_resource_signature(self.account_name, self.account_key, share_name)
+        sas.add_resource_signature(self.account_name, self.account_key, share_name)
 
-        return string_to_sign if return_sts else sas.get_token()
+        return sas.string_to_sign if return_sts else sas.get_token()
 
 
 class _FileSharedAccessHelper(_SharedAccessHelper):
@@ -221,7 +243,7 @@ class _FileSharedAccessHelper(_SharedAccessHelper):
 
         # Form the string to sign from shared_access_policy and canonicalized
         # resource. The order of values is important.
-        string_to_sign = \
+        self.string_to_sign = \
             (get_value_to_append(QueryStringConstants.SIGNED_PERMISSION) +
              get_value_to_append(QueryStringConstants.SIGNED_START) +
              get_value_to_append(QueryStringConstants.SIGNED_EXPIRY) +
@@ -237,13 +259,11 @@ class _FileSharedAccessHelper(_SharedAccessHelper):
              get_value_to_append(QueryStringConstants.SIGNED_CONTENT_TYPE))
 
         # remove the trailing newline
-        if string_to_sign[-1] == '\n':
-            string_to_sign = string_to_sign[:-1]
+        if self.string_to_sign[-1] == '\n':
+            self.string_to_sign = self.string_to_sign[:-1]
 
         self._add_query(QueryStringConstants.SIGNED_SIGNATURE,
-                        sign_string(account_key, string_to_sign))
-
-        return string_to_sign
+                        sign_string(account_key, self.string_to_sign))
 
 
 def generate_account_sas(
@@ -395,7 +415,7 @@ def generate_share_sas(
     :keyword str protocol:
         Specifies the protocol permitted for a request made. The default value is https.
     :keyword bool return_sts:
-        If set to True, returns a string to sign. The default value is False.
+        For debugging purposes only. If set to True, returns the string to sign instead of the SAS.
     :return: A Shared Access Signature (sas) token.
     :rtype: str
     """
@@ -495,7 +515,7 @@ def generate_file_sas(
     :keyword str protocol:
         Specifies the protocol permitted for a request made. The default value is https.
     :keyword bool return_sts:
-        If set to True, returns a string to sign. The default value is False.
+        For debugging purposes only. If set to True, returns the string to sign instead of the SAS.
     :return: A Shared Access Signature (sas) token.
     :rtype: str
     """

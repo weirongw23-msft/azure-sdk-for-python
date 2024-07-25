@@ -106,8 +106,16 @@ class SharedAccessSignature(object):
         self.account_key = account_key
         self.x_ms_version = x_ms_version
 
-    def generate_account(self, services, resource_types, permission, expiry, start=None,
-                         ip=None, protocol=None, return_sts=False) -> str:
+    def generate_account(
+        self, services,
+        resource_types,
+        permission,
+        expiry,
+        start=None,
+        ip=None,
+        protocol=None,
+        return_sts=False
+    ) -> str:
         '''
         Generates a shared access signature for the account.
         Use the returned signature with the sas_token parameter of the service
@@ -149,21 +157,22 @@ class SharedAccessSignature(object):
             Specifies the protocol permitted for a request made. The default value
             is https,http. See :class:`~azure.storage.common.models.Protocol` for possible values.
         :param bool return_sts:
-            If set to True, returns a string to sign. The default value is False.
+            For debugging purposes only. If set to True, returns the string to sign instead of the SAS.
         :returns: The generated SAS token for the account.
         :rtype: str
         '''
         sas = _SharedAccessHelper()
         sas.add_base(permission, expiry, start, ip, protocol, self.x_ms_version)
         sas.add_account(services, resource_types)
-        string_to_sign = sas.add_account_signature(self.account_name, self.account_key)
+        sas.add_account_signature(self.account_name, self.account_key)
 
-        return string_to_sign if return_sts else sas.get_token()
+        return sas.string_to_sign if return_sts else sas.get_token()
 
 
 class _SharedAccessHelper(object):
     def __init__(self):
         self.query_dict = {}
+        self.string_to_sign = ""
 
     def _add_query(self, name, val):
         if val:
@@ -209,7 +218,7 @@ class _SharedAccessHelper(object):
             return_value = self.query_dict.get(query) or ''
             return return_value + '\n'
 
-        string_to_sign = \
+        self.string_to_sign = \
             (account_name + '\n' +
              get_value_to_append(QueryStringConstants.SIGNED_PERMISSION) +
              get_value_to_append(QueryStringConstants.SIGNED_SERVICES) +
@@ -223,9 +232,7 @@ class _SharedAccessHelper(object):
              )
 
         self._add_query(QueryStringConstants.SIGNED_SIGNATURE,
-                        sign_string(account_key, string_to_sign))
-
-        return string_to_sign
+                        sign_string(account_key, self.string_to_sign))
 
     def get_token(self) -> str:
         return '&'.join([f'{n}={url_quote(v)}' for n, v in self.query_dict.items() if v is not None])
