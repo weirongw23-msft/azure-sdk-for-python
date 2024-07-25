@@ -107,7 +107,7 @@ class SharedAccessSignature(object):
         self.x_ms_version = x_ms_version
 
     def generate_account(self, services, resource_types, permission, expiry, start=None,
-                         ip=None, protocol=None) -> str:
+                         ip=None, protocol=None, return_sts=False) -> str:
         '''
         Generates a shared access signature for the account.
         Use the returned signature with the sas_token parameter of the service
@@ -148,15 +148,17 @@ class SharedAccessSignature(object):
         :param str protocol:
             Specifies the protocol permitted for a request made. The default value
             is https,http. See :class:`~azure.storage.common.models.Protocol` for possible values.
+        :param bool return_sts:
+            If set to True, returns a string to sign. The default value is False.
         :returns: The generated SAS token for the account.
         :rtype: str
         '''
         sas = _SharedAccessHelper()
         sas.add_base(permission, expiry, start, ip, protocol, self.x_ms_version)
         sas.add_account(services, resource_types)
-        sas.add_account_signature(self.account_name, self.account_key)
+        string_to_sign = sas.add_account_signature(self.account_name, self.account_key)
 
-        return sas.get_token()
+        return string_to_sign if return_sts else sas.get_token()
 
 
 class _SharedAccessHelper(object):
@@ -222,6 +224,8 @@ class _SharedAccessHelper(object):
 
         self._add_query(QueryStringConstants.SIGNED_SIGNATURE,
                         sign_string(account_key, string_to_sign))
+
+        return string_to_sign
 
     def get_token(self) -> str:
         return '&'.join([f'{n}={url_quote(v)}' for n, v in self.query_dict.items() if v is not None])

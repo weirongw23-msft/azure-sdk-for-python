@@ -46,7 +46,7 @@ class FileSharedAccessSignature(SharedAccessSignature):
                       permission=None, expiry=None, start=None, policy_id=None,
                       ip=None, protocol=None, cache_control=None,
                       content_disposition=None, content_encoding=None,
-                      content_language=None, content_type=None):
+                      content_language=None, content_type=None, return_sts=False):
         '''
         Generates a shared access signature for the file.
         Use the returned signature with the sas_token parameter of FileService.
@@ -108,6 +108,8 @@ class FileSharedAccessSignature(SharedAccessSignature):
         :param str content_type:
             Response header value for Content-Type when resource is accessed
             using this shared access signature.
+        :param bool return_sts:
+            If set to True, returns a string to sign. The default value is False.
         :returns: The generated SAS token for the account.
         :rtype: str
         '''
@@ -123,15 +125,15 @@ class FileSharedAccessSignature(SharedAccessSignature):
         sas.add_override_response_headers(cache_control, content_disposition,
                                           content_encoding, content_language,
                                           content_type)
-        sas.add_resource_signature(self.account_name, self.account_key, resource_path)
+        string_to_sign = sas.add_resource_signature(self.account_name, self.account_key, resource_path)
 
-        return sas.get_token()
+        return string_to_sign if return_sts else sas.get_token()
 
     def generate_share(self, share_name, permission=None, expiry=None,
                        start=None, policy_id=None, ip=None, protocol=None,
                        cache_control=None, content_disposition=None,
                        content_encoding=None, content_language=None,
-                       content_type=None):
+                       content_type=None, return_sts=False):
         '''
         Generates a shared access signature for the share.
         Use the returned signature with the sas_token parameter of FileService.
@@ -188,6 +190,8 @@ class FileSharedAccessSignature(SharedAccessSignature):
         :param str content_type:
             Response header value for Content-Type when resource is accessed
             using this shared access signature.
+        :param bool return_sts:
+            If set to True, returns a string to sign. The default value is False.
         :returns: The generated SAS token for the account.
         :rtype: str
         '''
@@ -198,9 +202,9 @@ class FileSharedAccessSignature(SharedAccessSignature):
         sas.add_override_response_headers(cache_control, content_disposition,
                                           content_encoding, content_language,
                                           content_type)
-        sas.add_resource_signature(self.account_name, self.account_key, share_name)
+        string_to_sign = sas.add_resource_signature(self.account_name, self.account_key, share_name)
 
-        return sas.get_token()
+        return string_to_sign if return_sts else sas.get_token()
 
 
 class _FileSharedAccessHelper(_SharedAccessHelper):
@@ -239,6 +243,8 @@ class _FileSharedAccessHelper(_SharedAccessHelper):
         self._add_query(QueryStringConstants.SIGNED_SIGNATURE,
                         sign_string(account_key, string_to_sign))
 
+        return string_to_sign
+
 
 def generate_account_sas(
     account_name: str,
@@ -250,6 +256,7 @@ def generate_account_sas(
     ip: Optional[str] = None,
     *,
     services: Union[Services, str] = Services(fileshare=True),
+    return_sts: bool = False,
     **kwargs: Any
 ) -> str:
     """Generates a shared access signature for the file service.
@@ -287,6 +294,8 @@ def generate_account_sas(
         Will default to only this package (i.e. fileshare) if not provided.
     :keyword str protocol:
         Specifies the protocol permitted for a request made. The default value is https.
+    :keyword bool return_sts:
+        If set to True, returns a string to sign. The default value is False.
     :return: A Shared Access Signature (sas) token.
     :rtype: str
 
@@ -307,6 +316,7 @@ def generate_account_sas(
         expiry=expiry,
         start=start,
         ip=ip,
+        return_sts=return_sts,
         **kwargs
     ) # type: ignore
 
@@ -320,6 +330,8 @@ def generate_share_sas(
     start=None,  # type: Optional[Union[datetime, str]]
     policy_id=None,  # type: Optional[str]
     ip=None,  # type: Optional[str]
+    *,
+    return_sts: bool = False,
     **kwargs # type: Any
 ):  # type: (...) -> str
     """Generates a shared access signature for a share.
@@ -382,6 +394,8 @@ def generate_share_sas(
         using this shared access signature.
     :keyword str protocol:
         Specifies the protocol permitted for a request made. The default value is https.
+    :keyword bool return_sts:
+        If set to True, returns a string to sign. The default value is False.
     :return: A Shared Access Signature (sas) token.
     :rtype: str
     """
@@ -398,6 +412,7 @@ def generate_share_sas(
         start=start,
         policy_id=policy_id,
         ip=ip,
+        return_sts=return_sts,
         **kwargs
     )
 
@@ -412,6 +427,8 @@ def generate_file_sas(
     start=None,  # type: Optional[Union[datetime, str]]
     policy_id=None,  # type: Optional[str]
     ip=None,  # type: Optional[str]
+    *,
+    return_sts: bool = False,
     **kwargs # type: Any
 ):
     # type: (...) -> str
@@ -477,6 +494,8 @@ def generate_file_sas(
         using this shared access signature.
     :keyword str protocol:
         Specifies the protocol permitted for a request made. The default value is https.
+    :keyword bool return_sts:
+        If set to True, returns a string to sign. The default value is False.
     :return: A Shared Access Signature (sas) token.
     :rtype: str
     """
@@ -499,6 +518,7 @@ def generate_file_sas(
         start=start,
         policy_id=policy_id,
         ip=ip,
+        return_sts=return_sts,
         **kwargs
     )
 
