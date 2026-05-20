@@ -293,6 +293,7 @@ class StorageAccountHostsMixin(object):
         **kwargs: Any,
     ) -> Tuple[StorageConfiguration, Pipeline]:
         self._credential_policy: Any = None
+        use_session = bool(kwargs.pop("use_session", False))
         if hasattr(credential, "get_token"):
             if kwargs.get("audience"):
                 audience = str(kwargs.pop("audience")).rstrip("/") + DEFAULT_OAUTH_SCOPE
@@ -305,6 +306,27 @@ class StorageAccountHostsMixin(object):
             self._credential_policy = AzureSasCredentialPolicy(credential)
         elif credential is not None:
             raise TypeError(f"Unsupported credential: {type(credential)}")
+
+        # Session-based authentication: opt-in, TokenCredential only,
+        # container-scoped, only affects GET blob download requests.
+        self._session_policy: Any = None
+        if use_session:
+            if not hasattr(credential, "get_token"):
+                raise ValueError(
+                    "use_session=True requires a TokenCredential; received "
+                    f"{type(credential).__name__ if credential is not None else 'None'}."
+                )
+            container_name = getattr(self, "container_name", None)
+            if not container_name:
+                raise ValueError(
+                    "use_session=True is only supported on container-scoped clients (ContainerClient)."
+                )
+            from .session import SessionAuthenticationPolicy  # local import to avoid cycles
+            self._session_policy = SessionAuthenticationPolicy(
+                account_name=self.account_name,
+                container_name=container_name,
+                client_ref=self,
+            )
 
         config = kwargs.get("_configuration") or create_configuration(**kwargs)
         if kwargs.get("_pipeline"):
@@ -327,11 +349,18 @@ class StorageAccountHostsMixin(object):
             config.headers_policy,
             StorageRequestHook(**kwargs),
             self._credential_policy,
+            # The session policy must run AFTER the credential policy so that
+            # for session-eligible requests it can overwrite the Bearer token
+            # ``Authorization`` header with a SharedKey-style signature derived
+            # from the session key. For non-eligible requests it is a no-op.
+            self._session_policy,
             config.logging_policy,
             StorageResponseHook(**kwargs),
             DistributedTracingPolicy(**kwargs),
             HttpLoggingPolicy(**kwargs),
         ]
+        # Drop any None entries (e.g., when session/credential policies are not configured).
+        policies = [p for p in policies if p is not None]
         if kwargs.get("_additional_pipeline_policies"):
             policies = policies + kwargs.get("_additional_pipeline_policies")  # type: ignore
         config.transport = transport  # type: ignore

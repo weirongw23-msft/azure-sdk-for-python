@@ -330,7 +330,11 @@ def _download_blob_options(
         'encoding': encoding,
         'timeout': kwargs.pop('timeout', None),
         'name': blob_name,
-        'container': container_name}
+        'container': container_name,
+        # Marker consumed by the session authentication policy (if installed).
+        # Non-eligible operations do not set this flag, so the policy is a no-op
+        # for them. The key is intentionally underscored as it is internal.
+        '_session_eligible': True}
     options.update(kwargs)
     return options
 
