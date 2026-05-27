@@ -13,45 +13,15 @@ from devtools_testutils import AzureMgmtRecordedTestCase, RandomNameResourceGrou
 AZURE_LOCATION = "eastus"
 
 
-@pytest.mark.skip("you may need to update the auto-generated test case before run it")
+@pytest.mark.live_test_only
 class TestMicrosoftSerialConsole(AzureMgmtRecordedTestCase):
     def setup_method(self, method):
         self.client = self.create_mgmt_client(MicrosoftSerialConsoleClient)
 
     @RandomNameResourceGroupPreparer(location=AZURE_LOCATION)
     @recorded_by_proxy
-    def test_get_console_status(self, resource_group):
-        response = self.client.get_console_status(
-            default="str",
-        )
-
-        # please add some check logic here by yourself
-        # ...
-
-    @RandomNameResourceGroupPreparer(location=AZURE_LOCATION)
-    @recorded_by_proxy
     def test_list_operations(self, resource_group):
         response = self.client.list_operations()
 
-        # please add some check logic here by yourself
-        # ...
-
-    @RandomNameResourceGroupPreparer(location=AZURE_LOCATION)
-    @recorded_by_proxy
-    def test_disable_console(self, resource_group):
-        response = self.client.disable_console(
-            default="str",
-        )
-
-        # please add some check logic here by yourself
-        # ...
-
-    @RandomNameResourceGroupPreparer(location=AZURE_LOCATION)
-    @recorded_by_proxy
-    def test_enable_console(self, resource_group):
-        response = self.client.enable_console(
-            default="str",
-        )
-
-        # please add some check logic here by yourself
-        # ...
+        result = [r for r in response]
+        assert len(result)
