@@ -3,6 +3,8 @@
 ## 12.31.0b1 (Unreleased)
 
 ### Features Added
+- Added support for service version 2026-10-06.- Added access tier information to the response of `BlobClient`'s `download_blob` API. The `blob_tier`, `blob_tier_inferred`,
+`blob_tier_change_time`, and `smart_access_tier` properties are now populated on the downloaded blob's `properties`.
 
 ## 12.30.0 (2026-06-08)
 
