@@ -13,7 +13,7 @@ from devtools_testutils.aio import recorded_by_proxy_async
 from devtools_testutils.storage.aio import AsyncStorageRecordedTestCase
 from settings.testcase import FileSharePreparer
 
-from azure.core.exceptions import ResourceNotFoundError
+from azure.core.exceptions import HttpResponseError, ResourceExistsError, ResourceNotFoundError
 from azure.core.pipeline.transport import (  # pylint: disable=no-name-in-module
     AioHttpTransportResponse,
     AsyncHttpTransport,
@@ -89,7 +89,7 @@ class TestStorageFileNFSAsync(AsyncStorageRecordedTestCase):
             if self.is_live:
                 try:
                     await fsc.create_share(self.share_name, protocols="NFS")
-                except:
+                except ResourceExistsError:
                     pass
 
     def teardown_method(self):
@@ -101,7 +101,7 @@ class TestStorageFileNFSAsync(AsyncStorageRecordedTestCase):
                     token_intent=TEST_INTENT,
                 )
                 fsc.delete_share(self.share_name)
-            except:
+            except HttpResponseError:
                 pass
 
     # --Helpers----------------------------------------------------------
@@ -302,7 +302,6 @@ class TestStorageFileNFSAsync(AsyncStorageRecordedTestCase):
         directory_name = self._get_directory_name()
         directory_client = share_client.get_directory_client(directory_name)
         source_file_name = self._get_file_name("file1")
-        source_file_client = directory_client.get_file_client(source_file_name)
         hard_link_file_name = self._get_file_name("file2")
         hard_link_file_client = directory_client.get_file_client(hard_link_file_name)
 
@@ -361,7 +360,6 @@ class TestStorageFileNFSAsync(AsyncStorageRecordedTestCase):
         directory_name = self._get_directory_name()
         directory_client = share_client.get_directory_client(directory_name)
         source_file_name = self._get_file_name("file1")
-        source_file_client = directory_client.get_file_client(source_file_name)
         symbolic_link_file_name = self._get_file_name("file2")
         symbolic_link_file_client = directory_client.get_file_client(symbolic_link_file_name)
         target = f"{directory_name}/{source_file_name}"

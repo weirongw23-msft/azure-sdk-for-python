@@ -13,7 +13,7 @@ from devtools_testutils import recorded_by_proxy
 from devtools_testutils.storage import StorageRecordedTestCase
 from settings.testcase import FileSharePreparer
 
-from azure.core.exceptions import ResourceNotFoundError
+from azure.core.exceptions import HttpResponseError, ResourceExistsError, ResourceNotFoundError
 from azure.core.pipeline.transport import HttpTransport, RequestsTransportResponse  # pylint: disable=no-name-in-module
 from azure.storage.fileshare import (
     ContentSettings,
@@ -207,14 +207,14 @@ class TestStorageFileNFS(StorageRecordedTestCase):
         if self.is_live:
             try:
                 self.fsc.create_share(self.share_name, protocols="NFS")
-            except:
+            except ResourceExistsError:
                 pass
 
     def teardown_method(self):
         if self.is_live and self.fsc:
             try:
                 self.fsc.delete_share(self.share_name)
-            except:
+            except HttpResponseError:
                 pass
 
     # --Helpers----------------------------------------------------------
@@ -415,7 +415,6 @@ class TestStorageFileNFS(StorageRecordedTestCase):
         directory_name = self._get_directory_name()
         directory_client = share_client.get_directory_client(directory_name)
         source_file_name = self._get_file_name("file1")
-        source_file_client = directory_client.get_file_client(source_file_name)
         hard_link_file_name = self._get_file_name("file2")
         hard_link_file_client = directory_client.get_file_client(hard_link_file_name)
 
@@ -472,7 +471,6 @@ class TestStorageFileNFS(StorageRecordedTestCase):
         directory_name = self._get_directory_name()
         directory_client = share_client.get_directory_client(directory_name)
         source_file_name = self._get_file_name("file1")
-        source_file_client = directory_client.get_file_client(source_file_name)
         symbolic_link_file_name = self._get_file_name("file2")
         symbolic_link_file_client = directory_client.get_file_client(symbolic_link_file_name)
         target = f"{directory_name}/{source_file_name}"
