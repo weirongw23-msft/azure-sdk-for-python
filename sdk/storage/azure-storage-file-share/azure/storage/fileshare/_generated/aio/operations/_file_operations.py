@@ -153,7 +153,8 @@ class FileOperations:  # pylint: disable=too-many-public-methods
          None.
         :type file_mode: str
         :param nfs_file_type: Optional, NFS only. Type of the file or directory. Known values are:
-         "Regular", "Directory", and "SymLink". Default value is None.
+         "Regular", "Directory", "SymLink", "BlockDevice", "CharacterDevice", "Socket", and "Fifo".
+         Default value is None.
         :type nfs_file_type: str or ~azure.storage.fileshare.models.NfsFileType
         :param content_md5: An MD5 hash of the content. This hash is used to verify the integrity of
          the data during transport. When the Content-MD5 header is specified, the File service compares
@@ -1576,8 +1577,6 @@ class FileOperations:  # pylint: disable=too-many-public-methods
         timeout: Optional[int] = None,
         range: Optional[str] = None,
         support_rename: Optional[bool] = None,
-        marker: Optional[str] = None,
-        maxresults: Optional[int] = None,
         lease_access_conditions: Optional[_models.LeaseAccessConditions] = None,
         **kwargs: Any
     ) -> _models.ShareFileRangeList:
@@ -1604,15 +1603,6 @@ class FileOperations:  # pylint: disable=too-many-public-methods
          operation will result in a failure with 409 (Conflict) response. The default value is false.
          Default value is None.
         :type support_rename: bool
-        :param marker: A string value that identifies the portion of the list to be returned with the
-         next list operation. The operation returns a marker value within the response body if the list
-         returned was not complete. The marker value may then be used in a subsequent call to request
-         the next set of list items. The marker value is opaque to the client. Default value is None.
-        :type marker: str
-        :param maxresults: Specifies the maximum number of entries to return. If the request does not
-         specify maxresults, or specifies a value greater than 5,000, the server will return up to 5,000
-         items. Default value is None.
-        :type maxresults: int
         :param lease_access_conditions: Parameter group. Default value is None.
         :type lease_access_conditions: ~azure.storage.fileshare.models.LeaseAccessConditions
         :return: ShareFileRangeList or the result of cls(response)
@@ -1646,8 +1636,6 @@ class FileOperations:  # pylint: disable=too-many-public-methods
             range=range,
             lease_id=_lease_id,
             support_rename=support_rename,
-            marker=marker,
-            maxresults=maxresults,
             allow_trailing_dot=self._config.allow_trailing_dot,
             file_request_intent=self._config.file_request_intent,
             comp=comp,
