@@ -173,9 +173,7 @@ class MockListTransport(HttpTransport):
             requests_response=MockHttpClientResponse(
                 request.url,
                 self._body,
-                CaseInsensitiveDict(
-                    {"Content-Type": "application/xml", "Content-Length": str(len(self._body))}
-                ),
+                CaseInsensitiveDict({"Content-Type": "application/xml", "Content-Length": str(len(self._body))}),
             ),
         )
 
@@ -190,7 +188,6 @@ class MockListTransport(HttpTransport):
 
     def __exit__(self, *args: Any) -> None:
         pass
-
 
 
 class TestStorageFileNFS(StorageRecordedTestCase):
@@ -492,9 +489,7 @@ class TestStorageFileNFS(StorageRecordedTestCase):
 
         share_client = self.fsc.get_share_client(self.share_name)
         directory_name = self._get_directory_name()
-        directory_client = share_client.create_directory(
-            directory_name, owner="345", group="123", file_mode="0755"
-        )
+        directory_client = share_client.create_directory(directory_name, owner="345", group="123", file_mode="0755")
 
         file_name = self._get_file_name("file1")
         file_client = directory_client.get_file_client(file_name)
@@ -602,4 +597,3 @@ class TestStorageFileNFS(StorageRecordedTestCase):
         assert socket.nfs_file_type == "Socket"
         assert socket.file_mode == "0755"
         assert socket.link_count == 1
-

@@ -1120,8 +1120,7 @@ class DirectoryPropertiesPaged(PageIterator):
             for i in segment.directory_items
         ]
         self.current_page.extend(
-            FileProperties._from_generated(i)  # pylint: disable = protected-access
-            for i in segment.file_items
+            FileProperties._from_generated(i) for i in segment.file_items  # pylint: disable = protected-access
         )
         self.current_page.extend(
             FileProperties._from_generated(i, file_type="SymLink")  # pylint: disable = protected-access

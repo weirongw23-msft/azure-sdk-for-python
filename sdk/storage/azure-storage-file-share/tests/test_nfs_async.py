@@ -49,9 +49,7 @@ class MockListTransport(AsyncHttpTransport):
             aiohttp_response=MockAioHttpClientResponse(
                 request.url,
                 self._body,
-                CaseInsensitiveDict(
-                    {"Content-Type": "application/xml", "Content-Length": str(len(self._body))}
-                ),
+                CaseInsensitiveDict({"Content-Type": "application/xml", "Content-Length": str(len(self._body))}),
             ),
             decompress=False,
         )
@@ -493,4 +491,3 @@ class TestStorageFileNFSAsync(AsyncStorageRecordedTestCase):
         assert socket.nfs_file_type == "Socket"
         assert socket.file_mode == "0755"
         assert socket.link_count == 1
-
