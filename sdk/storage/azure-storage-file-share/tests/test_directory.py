@@ -13,7 +13,7 @@ from devtools_testutils import recorded_by_proxy
 from devtools_testutils.storage import StorageRecordedTestCase
 from settings.testcase import FileSharePreparer
 
-from azure.core.exceptions import ResourceExistsError, ResourceNotFoundError
+from azure.core.exceptions import HttpResponseError, ResourceExistsError, ResourceNotFoundError
 from azure.storage.fileshare import (
     generate_share_sas,
     NTFSAttributes,
@@ -945,9 +945,10 @@ class TestStorageDirectory(StorageRecordedTestCase):
             assert props.owner is None
             assert props.group is None
             assert props.file_mode is None
+
         try:
             share_client.delete_share()
-        except:
+        except HttpResponseError:
             pass
 
     @FileSharePreparer()

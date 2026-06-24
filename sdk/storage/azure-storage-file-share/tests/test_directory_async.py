@@ -15,7 +15,7 @@ from devtools_testutils.aio import recorded_by_proxy_async
 from devtools_testutils.storage.aio import AsyncStorageRecordedTestCase
 from settings.testcase import FileSharePreparer
 
-from azure.core.exceptions import ResourceExistsError, ResourceNotFoundError
+from azure.core.exceptions import HttpResponseError, ResourceExistsError, ResourceNotFoundError
 from azure.storage.fileshare import (
     generate_share_sas,
     NTFSAttributes,
@@ -1020,7 +1020,7 @@ class TestStorageDirectoryAsync(AsyncStorageRecordedTestCase):
 
         try:
             await share_client.delete_share()
-        except:
+        except HttpResponseError:
             pass
 
     @FileSharePreparer()
