@@ -1427,7 +1427,7 @@ class FileProperties(DictMixin):
         props.name = unquote(generated.name.content) if generated.name.encoded else generated.name.content
         props.file_id = generated.file_id
         props.etag = generated.properties.etag
-        props.file_attributes = generated.attributes
+        props.file_attributes = getattr(generated, "attributes", None)
         props.last_modified = generated.properties.last_modified
         props.creation_time = generated.properties.creation_time
         props.last_access_time = generated.properties.last_access_time
@@ -1435,15 +1435,15 @@ class FileProperties(DictMixin):
         props.change_time = generated.properties.change_time
         props.size = generated.properties.content_length
         props.content_length = generated.properties.content_length
-        props.permission_key = generated.permission_key
+        props.permission_key = getattr(generated, "permission_key", None)
         props.owner = generated.properties.uid
         props.group = generated.properties.gid
         props.file_mode = generated.properties.mode
         props.link_count = generated.link_count
-        props.nfs_file_type = generated.file_type or file_type
-        props.link_text = generated.link_text
-        props.device_major = generated.device_major
-        props.device_minor = generated.device_minor
+        props.nfs_file_type = getattr(generated, "file_type", None) or file_type
+        props.link_text = getattr(generated, "link_text", None)
+        props.device_major = getattr(generated, "device_major", None)
+        props.device_minor = getattr(generated, "device_minor", None)
         return props
 
 
