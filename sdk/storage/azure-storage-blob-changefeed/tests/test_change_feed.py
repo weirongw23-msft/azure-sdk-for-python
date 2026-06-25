@@ -434,3 +434,64 @@ class TestStorageChangeFeed(StorageRecordedTestCase):
         dict_token_with_1_shard = json.loads(token_with_1_shard)
         assert len(dict_token_with_1_shard["CurrentSegmentCursor"]["ShardCursors"]) == 1
         assert len(dict_token["CurrentSegmentCursor"]["ShardCursors"]) == 3
+
+    @ChangeFeedPreparer()
+    @recorded_by_proxy
+    def test_parse_change_feed_event_schemas_v6_to_v8(self, **kwargs):
+        storage_account_name = kwargs.pop("storage_account_name")
+        storage_account_key = kwargs.pop("storage_account_key")
+
+        v6_event_types = {"AppendBlobDataUpdated"}
+        v7_event_types = {"BlobLastAccessTimeUpdated"}
+        v8_event_types = {"ContainerCreated", "ContainerDeleted", "ContainerPropertiesUpdated"}
+
+        v6_operation_names = {"AppendBlock"}
+        v7_operation_names = {"UpdateLastAccessTime"}
+        v8_operation_names = {"CreateContainer", "DeleteContainer", "RestoreContainer", "SetContainerMetadata"}
+
+        cf_client = ChangeFeedClient(self.account_url(storage_account_name, "blob"), storage_account_key.secret)
+        change_feed = cf_client.list_changes()
+
+        all_events = list(change_feed)
+        assert len(all_events) > 0
+
+        seen_event_types = set()
+        seen_operation_names = set()
+
+        for event in all_events:
+            # Every event must deserialize into a well-formed dict with the base envelope fields
+            assert isinstance(event, dict)
+            assert event.get("id") is not None
+            assert event.get("eventType") is not None
+            data = event.get("data")
+            assert isinstance(data, dict)
+
+            seen_event_types.add(event["eventType"])
+            if data.get("api") is not None:
+                seen_operation_names.add(data["api"])
+
+            # Schema V6 added the contentOffset and createTime data properties
+            if data.get("contentOffset") is not None:
+                assert isinstance(data["contentOffset"], int)
+            if data.get("createTime") is not None:
+                assert isinstance(data["createTime"], str)
+
+            # Schema V7 added the lastAccessTime data property
+            if data.get("lastAccessTime") is not None:
+                assert isinstance(data["lastAccessTime"], str)
+
+            # Schema V8 added the restoredContainerVersion data property
+            if data.get("restoredContainerVersion") is not None:
+                assert isinstance(data["restoredContainerVersion"], str)
+
+        new_event_types = v6_event_types | v7_event_types | v8_event_types
+        new_operation_names = v6_operation_names | v7_operation_names | v8_operation_names
+
+        assert seen_event_types & new_event_types, (
+            f"Expected at least one of the new V6-V8 event types {sorted(new_event_types)}, "
+            f"but only saw {sorted(seen_event_types)}"
+        )
+        assert seen_operation_names & new_operation_names, (
+            f"Expected at least one of the new V6-V8 operation names {sorted(new_operation_names)}, "
+            f"but only saw {sorted(seen_operation_names)}"
+        )
