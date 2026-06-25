@@ -489,21 +489,23 @@ class TestStorageFileNFS(StorageRecordedTestCase):
 
         share_client = self.fsc.get_share_client(self.share_name)
         directory_name = self._get_directory_name()
-        directory_client = share_client.create_directory(directory_name, owner="345", group="123", file_mode="0755")
+        owner, group, file_mode = "345", "123", "0644"
+        directory_client = share_client.create_directory(directory_name, owner=owner, group=group, file_mode="0755")
 
         file_name = self._get_file_name("file1")
         file_client = directory_client.get_file_client(file_name)
-        file_client.create_file(size=1024, owner="345", group="123", file_mode="0644")
+        file_client.create_file(size=1024, owner=owner, group=group, file_mode=file_mode)
 
         symlink_name = self._get_file_name("file2")
         symlink_client = directory_client.get_file_client(symlink_name)
         target = f"{directory_name}/{file_name}"
-        symlink_client.create_symlink(target=target, owner="345", group="123")
+        symlink_client.create_symlink(target=target, owner=owner, group=group)
 
         # Act
         items = list(
             directory_client.list_directories_and_files(
-                include=["Timestamps", "ETag", "Permissions", "LinkCount", "NfsAttributes"]
+                include=["timestamps", "Etag", "Permissions", "LinkCount", "NfsAttributes"],
+                include_extended_info=True,
             )
         )
         items_by_name = {item.name: item for item in items}
@@ -511,10 +513,10 @@ class TestStorageFileNFS(StorageRecordedTestCase):
         # Assert: file
         file_props = items_by_name[file_name]
         assert isinstance(file_props, FileProperties)
-        assert file_props.owner == "345"
-        assert file_props.group == "123"
-        assert file_props.file_mode == "0644"
-        assert file_props.nfs_file_type is None
+        assert file_props.owner == owner
+        assert file_props.group == group
+        assert file_props.file_mode == file_mode
+        assert file_props.nfs_file_type == "Regular"
         assert file_props.link_count == 1
         assert file_props.file_attributes is None
         assert file_props.permission_key is None
@@ -523,8 +525,8 @@ class TestStorageFileNFS(StorageRecordedTestCase):
         # Assert: symbolic link
         symlink_props = items_by_name[symlink_name]
         assert isinstance(symlink_props, FileProperties)
-        assert symlink_props.owner == "345"
-        assert symlink_props.group == "123"
+        assert symlink_props.owner == owner
+        assert symlink_props.group == group
         assert symlink_props.nfs_file_type == "SymLink"
         assert symlink_props.link_count == 1
 
