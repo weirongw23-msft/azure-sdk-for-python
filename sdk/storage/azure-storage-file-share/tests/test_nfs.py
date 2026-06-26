@@ -530,6 +530,7 @@ class TestStorageFileNFS(StorageRecordedTestCase):
         assert symlink_props.nfs_file_type == "SymLink"
         assert symlink_props.link_count == 1
 
+    @FileSharePreparer()
     def test_list_directories_and_files_special_types_mock(self):
         directory_client = ShareDirectoryClient(
             "https://fakeaccount.file.core.windows.net",
