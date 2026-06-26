@@ -560,7 +560,7 @@ class TestStorageFileNFS(StorageRecordedTestCase):
         assert regular.group == "1000"
         assert regular.file_mode == "0644"
         assert regular.link_count == 2
-        assert regular.nfs_file_type is None
+        assert regular.nfs_file_type == "Regular"
 
         symlink = items_by_name["symlink.txt"]
         assert isinstance(symlink, FileProperties)

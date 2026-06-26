@@ -1046,7 +1046,7 @@ class DirectoryProperties(DictMixin):
         props.group = generated.properties.gid
         props.file_mode = generated.properties.mode
         props.link_count = generated.link_count
-        props.nfs_file_type = "Directory" if generated.properties.mode is not None else None
+        props.nfs_file_type = "Directory"
         return props
 
 
@@ -1120,7 +1120,8 @@ class DirectoryPropertiesPaged(PageIterator):
             for i in segment.directory_items
         ]
         self.current_page.extend(
-            FileProperties._from_generated(i) for i in segment.file_items  # pylint: disable = protected-access
+            FileProperties._from_generated(i, file_type="Regular")  # pylint: disable = protected-access
+            for i in segment.file_items
         )
         self.current_page.extend(
             FileProperties._from_generated(i, file_type="SymLink")  # pylint: disable = protected-access
@@ -1439,7 +1440,7 @@ class FileProperties(DictMixin):
         props.group = generated.properties.gid
         props.file_mode = generated.properties.mode
         props.link_count = generated.link_count
-        props.nfs_file_type = getattr(generated, "file_type", None) or file_type
+        props.nfs_file_type = file_type or getattr(generated, "file_type", None)
         props.link_text = getattr(generated, "link_text", None)
         props.device_major = getattr(generated, "device_major", None)
         props.device_minor = getattr(generated, "device_minor", None)

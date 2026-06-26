@@ -408,7 +408,7 @@ class TestStorageFileNFSAsync(AsyncStorageRecordedTestCase):
         assert file_props.owner == owner
         assert file_props.group == group
         assert file_props.file_mode == file_mode
-        assert file_props.nfs_file_type is None
+        assert file_props.nfs_file_type == "Regular"
         assert file_props.link_count == 1
         assert file_props.file_attributes is None
         assert file_props.permission_key is None
@@ -454,7 +454,7 @@ class TestStorageFileNFSAsync(AsyncStorageRecordedTestCase):
         assert regular.group == "1000"
         assert regular.file_mode == "0644"
         assert regular.link_count == 2
-        assert regular.nfs_file_type is None
+        assert regular.nfs_file_type == "Regular"
 
         symlink = items_by_name["symlink.txt"]
         assert isinstance(symlink, FileProperties)
