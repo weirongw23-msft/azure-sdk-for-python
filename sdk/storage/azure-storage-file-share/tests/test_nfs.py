@@ -194,9 +194,9 @@ class TestStorageFileNFS(StorageRecordedTestCase):
 
     fsc: ShareServiceClient = None
 
-    def _setup(self, storage_account_name: str):
+    def _setup(self, storage_account_name: str, storage_account_key: Optional[str] = None) -> None:
         self.account_url = self.account_url(storage_account_name, "file")
-        self.credential = self.get_credential(ShareServiceClient)
+        self.credential = getattr(storage_account_key, "secret", None) or self.get_credential(ShareServiceClient)
         self.fsc = ShareServiceClient(
             account_url=self.account_url, credential=self.credential, token_intent=TEST_INTENT
         )
@@ -207,7 +207,7 @@ class TestStorageFileNFS(StorageRecordedTestCase):
             except ResourceExistsError:
                 pass
 
-    def teardown_method(self):
+    def teardown_method(self) -> None:
         if self.is_live and self.fsc:
             try:
                 self.fsc.delete_share(self.share_name)
@@ -482,10 +482,11 @@ class TestStorageFileNFS(StorageRecordedTestCase):
 
     @FileSharePreparer()
     @recorded_by_proxy
-    def test_list_directories_and_files(self, **kwargs: Any):
+    def test_list_directories_and_files_504(self, **kwargs: Any):
         premium_storage_file_account_name = kwargs.pop("premium_storage_file_account_name")
+        premium_storage_file_account_key = kwargs.pop("premium_storage_file_account_key")
 
-        self._setup(premium_storage_file_account_name)
+        self._setup(premium_storage_file_account_name, premium_storage_file_account_key)
 
         share_client = self.fsc.get_share_client(self.share_name)
         directory_name = self._get_directory_name()

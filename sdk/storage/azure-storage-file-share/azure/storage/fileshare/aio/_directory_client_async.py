@@ -593,8 +593,7 @@ class ShareDirectoryClient(AsyncStorageAccountHostsMixin, StorageAccountHostsMix
             Include this parameter to specify one or more datasets to include in the response.
             Possible str values are "timestamps", "Etag", "Attributes", "PermissionKey",
             "Permissions", "LinkCount", "NfsAttributes", and "All".
-            The values "Permissions", "LinkCount", "NfsAttributes", and "All" apply to NFS shares,
-            with the exception of "All" which can also be used on SMB shares.
+            The values "Permissions", "LinkCount", and "NfsAttributes" apply only to NFS shares.
 
             .. versionadded:: 12.6.0
 

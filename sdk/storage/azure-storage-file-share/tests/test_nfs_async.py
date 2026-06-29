@@ -423,7 +423,7 @@ class TestStorageFileNFSAsync(AsyncStorageRecordedTestCase):
         assert symlink_props.link_count == 1
 
     @FileSharePreparer()
-    async def test_list_directories_and_files_special_types_mock(self, **kwargs: Any):
+    async def test_list_directories_and_files_special_types_mock(self):
         directory_client = ShareDirectoryClient(
             "https://fakeaccount.file.core.windows.net",
             share_name="share",
