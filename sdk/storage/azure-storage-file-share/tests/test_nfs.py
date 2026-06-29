@@ -482,7 +482,7 @@ class TestStorageFileNFS(StorageRecordedTestCase):
 
     @FileSharePreparer()
     @recorded_by_proxy
-    def test_list_directories_and_files_504(self, **kwargs: Any):
+    def test_list_directories_and_files(self, **kwargs: Any):
         premium_storage_file_account_name = kwargs.pop("premium_storage_file_account_name")
         premium_storage_file_account_key = kwargs.pop("premium_storage_file_account_key")
 

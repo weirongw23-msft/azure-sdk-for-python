@@ -73,9 +73,9 @@ class TestStorageFileNFSAsync(AsyncStorageRecordedTestCase):
 
     fsc: AsyncShareServiceClient = None
 
-    async def _setup(self, storage_account_name: str):
+    async def _setup(self, storage_account_name: str, storage_account_key: Optional[str] = None) -> None:
         self.account_url = self.account_url(storage_account_name, "file")
-        self.credential = self.get_credential(AsyncShareServiceClient, is_async=True)
+        self.credential = getattr(storage_account_key, "secret", None) or self.get_credential(AsyncShareServiceClient, is_async=True)
         self.fsc = AsyncShareServiceClient(
             account_url=self.account_url, credential=self.credential, token_intent=TEST_INTENT
         )
@@ -374,8 +374,9 @@ class TestStorageFileNFSAsync(AsyncStorageRecordedTestCase):
     @recorded_by_proxy_async
     async def test_list_directories_and_files(self, **kwargs: Any):
         premium_storage_file_account_name = kwargs.pop("premium_storage_file_account_name")
+        premium_storage_file_account_key = kwargs.pop("premium_storage_file_account_key")
 
-        await self._setup(premium_storage_file_account_name)
+        await self._setup(premium_storage_file_account_name, premium_storage_file_account_key)
 
         share_client = self.fsc.get_share_client(self.share_name)
         directory_name = self._get_directory_name()
