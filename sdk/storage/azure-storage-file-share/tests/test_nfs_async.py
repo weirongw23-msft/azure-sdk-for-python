@@ -75,7 +75,9 @@ class TestStorageFileNFSAsync(AsyncStorageRecordedTestCase):
 
     async def _setup(self, storage_account_name: str, storage_account_key: Optional[str] = None) -> None:
         self.account_url = self.account_url(storage_account_name, "file")
-        self.credential = getattr(storage_account_key, "secret", None) or self.get_credential(AsyncShareServiceClient, is_async=True)
+        self.credential = getattr(storage_account_key, "secret", None) or self.get_credential(
+            AsyncShareServiceClient, is_async=True
+        )
         self.fsc = AsyncShareServiceClient(
             account_url=self.account_url, credential=self.credential, token_intent=TEST_INTENT
         )
