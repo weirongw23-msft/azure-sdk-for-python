@@ -792,6 +792,8 @@ def build_get_range_list_request(
     range: Optional[str] = None,
     lease_id: Optional[str] = None,
     support_rename: Optional[bool] = None,
+    marker: Optional[str] = None,
+    maxresults: Optional[int] = None,
     allow_trailing_dot: Optional[bool] = None,
     file_request_intent: Optional[Union[str, _models.ShareTokenIntent]] = None,
     **kwargs: Any
@@ -818,6 +820,10 @@ def build_get_range_list_request(
         _params["prevsharesnapshot"] = _SERIALIZER.query("prevsharesnapshot", prevsharesnapshot, "str")
     if timeout is not None:
         _params["timeout"] = _SERIALIZER.query("timeout", timeout, "int", minimum=0)
+    if marker is not None:
+        _params["marker"] = _SERIALIZER.query("marker", marker, "str")
+    if maxresults is not None:
+        _params["maxresults"] = _SERIALIZER.query("maxresults", maxresults, "int", minimum=1)
 
     # Construct headers
     _headers["x-ms-version"] = _SERIALIZER.header("version", version, "str")
@@ -2837,6 +2843,8 @@ class FileOperations:  # pylint: disable=too-many-public-methods
         timeout: Optional[int] = None,
         range: Optional[str] = None,
         support_rename: Optional[bool] = None,
+        marker: Optional[str] = None,
+        maxresults: Optional[int] = None,
         lease_access_conditions: Optional[_models.LeaseAccessConditions] = None,
         **kwargs: Any
     ) -> _models.ShareFileRangeList:
@@ -2863,6 +2871,15 @@ class FileOperations:  # pylint: disable=too-many-public-methods
          operation will result in a failure with 409 (Conflict) response. The default value is false.
          Default value is None.
         :type support_rename: bool
+        :param marker: A string value that identifies the portion of the list to be returned with the
+         next list operation. The operation returns a marker value within the response body if the list
+         returned was not complete. The marker value may then be used in a subsequent call to request
+         the next set of list items. The marker value is opaque to the client. Default value is None.
+        :type marker: str
+        :param maxresults: Specifies the maximum number of entries to return. If the request does not
+         specify maxresults, or specifies a value greater than 5,000, the server will return up to 5,000
+         items. Default value is None.
+        :type maxresults: int
         :param lease_access_conditions: Parameter group. Default value is None.
         :type lease_access_conditions: ~azure.storage.fileshare.models.LeaseAccessConditions
         :return: ShareFileRangeList or the result of cls(response)
@@ -2896,6 +2913,8 @@ class FileOperations:  # pylint: disable=too-many-public-methods
             range=range,
             lease_id=_lease_id,
             support_rename=support_rename,
+            marker=marker,
+            maxresults=maxresults,
             allow_trailing_dot=self._config.allow_trailing_dot,
             file_request_intent=self._config.file_request_intent,
             comp=comp,

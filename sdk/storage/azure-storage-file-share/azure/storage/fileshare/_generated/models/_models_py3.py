@@ -1390,11 +1390,14 @@ class ShareFileRangeList(_serialization.Model):
     :vartype ranges: list[~azure.storage.fileshare.models.FileRange]
     :ivar clear_ranges:
     :vartype clear_ranges: list[~azure.storage.fileshare.models.ClearRange]
+    :ivar next_marker:
+    :vartype next_marker: str
     """
 
     _attribute_map = {
         "ranges": {"key": "Ranges", "type": "[FileRange]", "xml": {"itemsName": "Range"}},
         "clear_ranges": {"key": "ClearRanges", "type": "[ClearRange]", "xml": {"itemsName": "ClearRange"}},
+        "next_marker": {"key": "NextMarker", "type": "str"},
     }
 
     def __init__(
@@ -1402,6 +1405,7 @@ class ShareFileRangeList(_serialization.Model):
         *,
         ranges: Optional[list["_models.FileRange"]] = None,
         clear_ranges: Optional[list["_models.ClearRange"]] = None,
+        next_marker: Optional[str] = None,
         **kwargs: Any
     ) -> None:
         """
@@ -1409,10 +1413,13 @@ class ShareFileRangeList(_serialization.Model):
         :paramtype ranges: list[~azure.storage.fileshare.models.FileRange]
         :keyword clear_ranges:
         :paramtype clear_ranges: list[~azure.storage.fileshare.models.ClearRange]
+        :keyword next_marker:
+        :paramtype next_marker: str
         """
         super().__init__(**kwargs)
         self.ranges = ranges
         self.clear_ranges = clear_ranges
+        self.next_marker = next_marker
 
 
 class ShareItemInternal(_serialization.Model):
