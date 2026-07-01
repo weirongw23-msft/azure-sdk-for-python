@@ -1,4 +1,1 @@
 recursive-include azure *.h *.c *.pyi py.typed
-include azure/__init__.py
-include azure/storage/__init__.py
-include azure/storage/extensions/__init__.py
