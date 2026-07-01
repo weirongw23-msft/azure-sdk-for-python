@@ -30,6 +30,8 @@ from ._generated import AzureBlobStorage
 from ._generated.models import SignedIdentifier
 from ._lease import BlobLeaseClient
 from ._list_blobs_helper import (
+    ArrowBlobPropertiesPaged,
+    ArrowBlobPrefixPaged,
     BlobNamesPaged,
     BlobPrefix,
     BlobPropertiesPaged,
@@ -803,9 +805,19 @@ class ContainerClient(StorageAccountHostsMixin, StorageEncryptionMixin):  # pyli
         :keyword int results_per_page:
             Controls the maximum number of Blobs that will be included in each page of results if using
             `ItemPaged.by_page()`.
+        :keyword response_format:
+            The format used to return and parse the List Blobs response. Possible values are
+            "auto", "xml", and "arrow". When set to "arrow", the response is returned and parsed in
+            Apache Arrow format (this requires the `nanoarrow` package). When set to "xml", the
+            standard XML response is parsed. "auto" currently behaves the same as "xml". This value
+            defaults to "xml".
+        :paramtype response_format: Literal["auto", "xml", "arrow"]
         :keyword str start_from:
             Specifies the full path (inclusive) to list paths from.
             Only one entity level is supported.
+        :keyword str end_before:
+            Specifies the relative path (exclusive) to end before list paths.
+            This may be used if response_format is set to "arrow".
         :keyword int timeout:
             Sets the server-side timeout for the operation in seconds. For more details see
             https://learn.microsoft.com/rest/api/storageservices/setting-timeouts-for-blob-service-operations.
@@ -834,15 +846,35 @@ class ContainerClient(StorageAccountHostsMixin, StorageEncryptionMixin):  # pyli
 
         results_per_page = kwargs.pop("results_per_page", None)
         timeout = kwargs.pop("timeout", None)
+        response_format = kwargs.pop("response_format", "xml")
+        use_arrow = response_format == "arrow"
+        if use_arrow:
+            try:
+                import nanoarrow  # pylint: disable=import-outside-toplevel,unused-import
+            except ImportError as e:
+                raise ImportError(
+                    "The 'nanoarrow' package is required to use Apache Arrow deserialization. "
+                    "Install it with: pip install nanoarrow"
+                ) from e
+
         command = functools.partial(
-            self._client.container.list_blob_flat_segment, include=include, timeout=timeout, **kwargs
+            (
+                self._client.container.list_blob_flat_segment_apache_arrow
+                if use_arrow
+                else self._client.container.list_blob_flat_segment
+            ),
+            include=include,
+            timeout=timeout,
+            **kwargs,
         )
         return ItemPaged(
             command,
             prefix=name_starts_with,
             results_per_page=results_per_page,
             container=self.container_name,
-            page_iterator_class=BlobPropertiesPaged,
+            page_iterator_class=ArrowBlobPropertiesPaged if use_arrow else BlobPropertiesPaged,
+            # pylint: disable-next=protected-access
+            **({"deserializer": self._client.container._deserialize} if use_arrow else {}),
         )
 
     @distributed_trace
@@ -922,8 +954,18 @@ class ContainerClient(StorageAccountHostsMixin, StorageEncryptionMixin):  # pyli
             element in the response body that acts as a placeholder for all blobs whose
             names begin with the same substring up to the appearance of the delimiter
             character. The delimiter may be a single character or a string.
+        :keyword response_format:
+            The format used to return and parse the List Blobs response. Possible values are
+            "auto", "xml", and "arrow". When set to "arrow", the response is returned and parsed in
+            Apache Arrow format (this requires the `nanoarrow` package). When set to "xml", the
+            standard XML response is parsed. "auto" currently behaves the same as "xml". This value
+            defaults to "xml".
+        :paramtype response_format: Literal["auto", "xml", "arrow"]
         :keyword str start_from:
             Specifies the full path (inclusive) to list paths from.
+        :keyword str end_before:
+            Specifies the relative path (exclusive) to end before list paths.
+            This may be used if response_format is set to "arrow".
         :keyword int timeout:
             Sets the server-side timeout for the operation in seconds. For more details see
             https://learn.microsoft.com/rest/api/storageservices/setting-timeouts-for-blob-service-operations.
@@ -943,6 +985,33 @@ class ContainerClient(StorageAccountHostsMixin, StorageEncryptionMixin):  # pyli
 
         results_per_page = kwargs.pop("results_per_page", None)
         timeout = kwargs.pop("timeout", None)
+        response_format = kwargs.pop("response_format", "xml")
+        use_arrow = response_format == "arrow"
+        if use_arrow:
+            try:
+                import nanoarrow  # pylint: disable=import-outside-toplevel,unused-import
+            except ImportError as e:
+                raise ImportError(
+                    "The 'nanoarrow' package is required to use Apache Arrow deserialization. "
+                    "Install it with: pip install nanoarrow"
+                ) from e
+            command = functools.partial(
+                self._client.container.list_blob_hierarchy_segment_apache_arrow,
+                delimiter=delimiter,
+                include=include,
+                timeout=timeout,
+                **kwargs,
+            )
+            return ItemPaged(
+                command,
+                prefix=name_starts_with,
+                results_per_page=results_per_page,
+                container=self.container_name,
+                delimiter=delimiter,
+                deserializer=self._client.container._deserialize,  # pylint: disable=protected-access
+                page_iterator_class=ArrowBlobPrefixPaged,
+            )
+
         command = functools.partial(
             self._client.container.list_blob_hierarchy_segment,
             delimiter=delimiter,

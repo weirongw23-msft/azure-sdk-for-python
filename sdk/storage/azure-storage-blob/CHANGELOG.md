@@ -4,6 +4,10 @@
 
 ### Features Added
 - Added support for service version 2026-10-06.
+- Added support for parsing List Blobs responses in Apache Arrow format. Pass the
+`use_arrow=True` keyword to `ContainerClient`'s `list_blobs` and `walk_blobs` APIs
+to opt in. This requires the `nanoarrow` package and also enables the new
+`start_from` and `end_before` keywords for range-based listing.
 - Added access tier information to the response of `BlobClient`'s `download_blob` API.
 The `blob_tier`, `blob_tier_inferred`, `blob_tier_change_time`, and `smart_access_tier`
 properties are now populated on the downloaded blob's `properties`.

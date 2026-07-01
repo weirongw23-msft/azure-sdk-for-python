@@ -202,7 +202,9 @@ class ContainerClient(StorageAccountHostsMixin, StorageEncryptionMixin):
         include: Optional[Union[str, List[str]]] = None,
         *,
         results_per_page: Optional[int] = None,
+        response_format: Literal["auto", "xml", "arrow"] = "xml",
         start_from: Optional[str] = None,
+        end_before: Optional[str] = None,
         timeout: Optional[int] = None,
         **kwargs: Any,
     ) -> ItemPaged[BlobProperties]: ...
