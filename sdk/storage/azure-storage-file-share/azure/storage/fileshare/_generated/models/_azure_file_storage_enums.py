@@ -93,6 +93,10 @@ class ListFilesIncludeType(str, Enum, metaclass=CaseInsensitiveEnumMeta):
     ETAG = "Etag"
     ATTRIBUTES = "Attributes"
     PERMISSION_KEY = "PermissionKey"
+    PERMISSIONS = "Permissions"
+    LINK_COUNT = "LinkCount"
+    NFS_ATTRIBUTES = "NfsAttributes"
+    ALL = "All"
 
 
 class ListSharesIncludeType(str, Enum, metaclass=CaseInsensitiveEnumMeta):
@@ -111,11 +115,15 @@ class ModeCopyMode(str, Enum, metaclass=CaseInsensitiveEnumMeta):
 
 
 class NfsFileType(str, Enum, metaclass=CaseInsensitiveEnumMeta):
-    """NfsFileType."""
+    """Type of the file."""
 
     REGULAR = "Regular"
     DIRECTORY = "Directory"
     SYM_LINK = "SymLink"
+    BLOCK_DEVICE = "BlockDevice"
+    CHARACTER_DEVICE = "CharacterDevice"
+    SOCKET = "Socket"
+    FIFO = "Fifo"
 
 
 class OwnerCopyMode(str, Enum, metaclass=CaseInsensitiveEnumMeta):
