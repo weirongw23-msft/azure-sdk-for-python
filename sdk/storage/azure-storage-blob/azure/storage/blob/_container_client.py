@@ -852,9 +852,9 @@ class ContainerClient(StorageAccountHostsMixin, StorageEncryptionMixin):  # pyli
             try:
                 import nanoarrow  # pylint: disable=import-outside-toplevel,unused-import
             except ImportError as e:
-                raise ImportError(
-                    "The 'nanoarrow' package is required to use Apache Arrow deserialization. "
-                    "Install it with: pip install nanoarrow"
+                raise ValueError(
+                    "The use of Apache Arrow deserialization requires the extra [arrow] to be installed. "
+                    "Please install this extra and try again."
                 ) from e
 
         command = functools.partial(
@@ -991,9 +991,9 @@ class ContainerClient(StorageAccountHostsMixin, StorageEncryptionMixin):  # pyli
             try:
                 import nanoarrow  # pylint: disable=import-outside-toplevel,unused-import
             except ImportError as e:
-                raise ImportError(
-                    "The 'nanoarrow' package is required to use Apache Arrow deserialization. "
-                    "Install it with: pip install nanoarrow"
+                raise ValueError(
+                    "The use of Apache Arrow deserialization requires the extra [arrow] to be installed. "
+                    "Please install this extra and try again."
                 ) from e
             command = functools.partial(
                 self._client.container.list_blob_hierarchy_segment_apache_arrow,
