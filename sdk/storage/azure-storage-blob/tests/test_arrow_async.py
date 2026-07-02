@@ -3,8 +3,11 @@
 # Licensed under the MIT License. See License.txt in the project root for
 # license information.
 # --------------------------------------------------------------------------
-import pyarrow as pa
+import io
+
+import nanoarrow as na
 import pytest
+from nanoarrow import ipc
 
 from datetime import datetime, timezone
 from unittest.mock import MagicMock, patch
@@ -29,11 +32,11 @@ from settings.testcase import BlobPreparer
 TEST_DATA = b"abc123"
 # ------------------------------------------------------------------------------
 
+
 class TestStorageApacheArrowAsync(AsyncStorageRecordedTestCase):
     async def _setup(self, storage_account_name, storage_account_key):
         self.bsc = BlobServiceClient(
-            self.account_url(storage_account_name, "blob"),
-            credential=storage_account_key.secret
+            self.account_url(storage_account_name, "blob"), credential=storage_account_key.secret
         )
         self.container_name = self.get_resource_name("utcontainerarrow")
         if self.is_live:
@@ -212,13 +215,15 @@ class TestStorageApacheArrowAsync(AsyncStorageRecordedTestCase):
     @pytest.mark.asyncio
     async def test_arrow_mock_expected_response(self):
         def _make_arrow_page(names: list[str], next_marker: str | None = None) -> bytes:
-            schema_meta = {b"NextMarker": (next_marker or "").encode()} if next_marker else {}
-            schema = pa.schema([pa.field("Name", pa.string())], metadata=schema_meta)
-            batch = pa.record_batch([pa.array(names, type=pa.string())], schema=schema)
-            sink = pa.BufferOutputStream()
-            with pa.ipc.new_stream(sink, schema) as writer:
-                writer.write_batch(batch)
-            return sink.getvalue().to_pybytes()
+            metadata = {"NextMarker": next_marker} if next_marker else None
+            schema = na.Schema(na.struct({"Name": na.string()}), metadata=metadata)
+            name_array = na.c_array(names, na.string())
+            batch = na.c_array_from_buffers(schema, length=len(names), buffers=[None], children=[name_array])
+            out = io.BytesIO()
+            writer = ipc.StreamWriter.from_writable(out)
+            writer.write_stream(batch)
+            writer.close()
+            return out.getvalue()
 
         blob_names = [
             "a/b/blob1",
@@ -428,13 +433,15 @@ class TestStorageApacheArrowAsync(AsyncStorageRecordedTestCase):
     @pytest.mark.asyncio
     async def test_arrow_mock_walk_expected_response(self):
         def _make_arrow_page(names: list[str], next_marker: str | None = None) -> bytes:
-            schema_meta = {b"NextMarker": (next_marker or "").encode()} if next_marker else {}
-            schema = pa.schema([pa.field("Name", pa.string())], metadata=schema_meta)
-            batch = pa.record_batch([pa.array(names, type=pa.string())], schema=schema)
-            sink = pa.BufferOutputStream()
-            with pa.ipc.new_stream(sink, schema) as writer:
-                writer.write_batch(batch)
-            return sink.getvalue().to_pybytes()
+            metadata = {"NextMarker": next_marker} if next_marker else None
+            schema = na.Schema(na.struct({"Name": na.string()}), metadata=metadata)
+            name_array = na.c_array(names, na.string())
+            batch = na.c_array_from_buffers(schema, length=len(names), buffers=[None], children=[name_array])
+            out = io.BytesIO()
+            writer = ipc.StreamWriter.from_writable(out)
+            writer.write_stream(batch)
+            writer.close()
+            return out.getvalue()
 
         blob_names = [
             "a/b/blob1",
