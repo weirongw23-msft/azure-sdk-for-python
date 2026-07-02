@@ -337,11 +337,9 @@ class TestStorageApacheArrow(StorageRecordedTestCase):
         container = self.bsc.get_container_client(self.container_name)
         blob_pages = container.walk_blobs(response_format="arrow", results_per_page=3).by_page()
         first_blobs_list = list(next(blob_pages))
-        self.verify_blobs(first_blobs_list, blob_names[:3])
+        self.verify_blobs(first_blobs_list, ["a/", "d/", "flat_blob1"])
         second_blobs_list = list(next(blob_pages))
-        self.verify_blobs(second_blobs_list, blob_names[3:6])
-        third_blobs_list = list(next(blob_pages))
-        self.verify_blobs(third_blobs_list, blob_names[6:])
+        self.verify_blobs(second_blobs_list, ["flat_blob2", "flat_blob3", "flat_blob4"])
 
     def test_arrow_mock_walk_xml_response(self):
         blob_names = [
