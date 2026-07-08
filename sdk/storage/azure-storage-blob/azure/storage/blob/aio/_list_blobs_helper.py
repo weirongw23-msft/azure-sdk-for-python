@@ -255,7 +255,7 @@ class ArrowBlobPropertiesPaged(BlobPropertiesPaged):
         content_type = response_headers.get("Content-Type", "")
         location_mode = getattr(pipeline_response.http_response, "location_mode", None)
         # The response is Arrow only when the service returns the Arrow stream media type.
-        if _ARROW_CONTENT_TYPE.split(",", 1)[0] in content_type:
+        if _ARROW_CONTENT_TYPE in content_type:
             chunks = []
             if hasattr(deserialized, "__aiter__"):
                 async for chunk in deserialized:

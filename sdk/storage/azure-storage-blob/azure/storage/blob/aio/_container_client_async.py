@@ -827,11 +827,12 @@ class ContainerClient(  # type: ignore [misc]  # pylint: disable=too-many-public
             Controls the maximum number of Blobs that will be included in each page of results if using
             `AsyncItemPaged.by_page()`.
         :keyword response_format:
-            The format used to return and parse the List Blobs response. Possible values are
-            "auto", "xml", and "arrow". When set to "arrow", the response is returned and parsed in
-            Apache Arrow format (this requires the `nanoarrow` package). When set to "xml", the
-            standard XML response is parsed. "auto" currently behaves the same as "xml". This value
-            defaults to "xml".
+            The format used to return and parse the List Blobs response.
+            Possible values are "auto", "xml", and "arrow".
+            Choose "auto" to let the SDK choose the best algorithm, currently "xml". The default value is "auto".
+
+            .. note::
+                The use of "arrow" requires `nanoarrow` to be installed.
         :paramtype response_format: Literal["auto", "xml", "arrow"]
         :keyword str start_from:
             Specifies the full path (inclusive) to list paths from.
@@ -874,8 +875,8 @@ class ContainerClient(  # type: ignore [misc]  # pylint: disable=too-many-public
                 import nanoarrow  # pylint: disable=import-outside-toplevel,unused-import
             except ImportError as e:
                 raise ValueError(
-                    "The use of Apache Arrow deserialization requires the extra [arrow] to be installed. "
-                    "Please install this extra and try again."
+                    "The use of Apache Arrow deserialization requires nanoarrow to be installed. "
+                    "Please install nanoarrow and try again."
                 ) from e
         command = functools.partial(
             (
@@ -975,11 +976,12 @@ class ContainerClient(  # type: ignore [misc]  # pylint: disable=too-many-public
             names begin with the same substring up to the appearance of the delimiter
             character. The delimiter may be a single character or a string.
         :keyword response_format:
-            The format used to return and parse the List Blobs response. Possible values are
-            "auto", "xml", and "arrow". When set to "arrow", the response is returned and parsed in
-            Apache Arrow format (this requires the `nanoarrow` package). When set to "xml", the
-            standard XML response is parsed. "auto" currently behaves the same as "xml". This value
-            defaults to "xml".
+            The format used to return and parse the List Blobs response.
+            Possible values are "auto", "xml", and "arrow".
+            Choose "auto" to let the SDK choose the best algorithm, currently "xml". The default value is "auto".
+
+            .. note::
+                The use of "arrow" requires `nanoarrow` to be installed.
         :paramtype response_format: Literal["auto", "xml", "arrow"]
         :keyword str start_from:
             Specifies the full path (inclusive) to list paths from.
@@ -1013,8 +1015,8 @@ class ContainerClient(  # type: ignore [misc]  # pylint: disable=too-many-public
                 import nanoarrow  # pylint: disable=import-outside-toplevel,unused-import
             except ImportError as e:
                 raise ValueError(
-                    "The use of Apache Arrow deserialization requires the extra [arrow] to be installed. "
-                    "Please install this extra and try again."
+                    "The use of Apache Arrow deserialization requires nanoarrow to be installed. "
+                    "Please install nanoarrow and try again."
                 ) from e
             command = functools.partial(
                 self._client.container.list_blob_hierarchy_segment_apache_arrow,

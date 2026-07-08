@@ -88,9 +88,6 @@ setup(
         "aio": [
             "azure-core[aio]>=1.37.0",
         ],
-        "arrow": [
-            "nanoarrow>=0.8.0",
-        ],
         "ext-checksums": [
             "azure-storage-extensions>=0.1.0,<1.0.0",
         ],

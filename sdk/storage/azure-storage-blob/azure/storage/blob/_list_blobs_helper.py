@@ -4,6 +4,7 @@
 # license information.
 # --------------------------------------------------------------------------
 
+from io import BytesIO
 from typing import Any, Callable, cast, List, Optional, Tuple, Union
 from urllib.parse import unquote
 
@@ -31,7 +32,7 @@ from ._models import (
 from ._shared.models import DictMixin
 from ._shared.response_handlers import process_storage_error, return_context_and_deserialized, return_raw_deserialized
 
-_ARROW_CONTENT_TYPE = "application/vnd.apache.arrow.stream,application/xml"
+_ARROW_CONTENT_TYPE = "application/vnd.apache.arrow.stream"
 
 
 def _parse_arrow_response(  # pylint: disable=too-many-locals
@@ -45,8 +46,7 @@ def _parse_arrow_response(  # pylint: disable=too-many-locals
     :returns: A tuple of next marker and a list of BlobProperties.
     :rtype: Tuple[Optional[str], List[~azure.storage.blob.BlobProperties]]
     """
-    import io  # pylint: disable=import-outside-toplevel
-    import nanoarrow  # pylint: disable=import-outside-toplevel
+    from nanoarrow import ArrayStream  # pylint: disable=import-outside-toplevel
     from nanoarrow.ipc import InputStream  # pylint: disable=import-outside-toplevel
 
     # Declarative mapping: Arrow column name -> (BlobProperties attr, default value).
@@ -109,8 +109,8 @@ def _parse_arrow_response(  # pylint: disable=too-many-locals
     next_marker: Optional[str] = None
     blob_items: List[BlobProperties] = []
 
-    with InputStream.from_readable(io.BytesIO(raw_bytes)) as stream:
-        reader = nanoarrow.ArrayStream(stream)
+    with InputStream.from_readable(BytesIO(raw_bytes)) as stream:
+        reader = ArrayStream(stream)
         schema = reader.schema
 
         # The continuation token is embedded in the Arrow schema metadata.
@@ -494,7 +494,7 @@ class ArrowBlobPropertiesPaged(BlobPropertiesPaged):
         content_type = response_headers.get("Content-Type", "")
         location_mode = getattr(pipeline_response.http_response, "location_mode", None)
         # The response is Arrow only when the service returns the Arrow stream media type.
-        if _ARROW_CONTENT_TYPE.split(",", 1)[0] in content_type:
+        if _ARROW_CONTENT_TYPE in content_type:
             raw_bytes = b"".join(deserialized)
             next_marker, blob_items = _parse_arrow_response(raw_bytes, self.container)
             self._arrow_response = (next_marker, blob_items)
