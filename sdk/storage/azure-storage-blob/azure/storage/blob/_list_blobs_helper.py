@@ -36,12 +36,13 @@ _ARROW_CONTENT_TYPE = "application/vnd.apache.arrow.stream"
 
 
 def _parse_arrow_response(  # pylint: disable=too-many-locals
-    raw_bytes: bytes, container: Optional[str]
+    raw_bytes: Union[bytes, bytearray], container: Optional[str]
 ) -> Tuple[Optional[str], List[BlobProperties]]:
     """
     Parse an Apache Arrow IPC stream response into a list of BlobProperties.
 
-    :param bytes raw_bytes: The raw Arrow IPC bytes.
+    :param raw_bytes: The raw Arrow IPC bytes.
+    :type raw_bytes: bytes or bytearray
     :param Optional[str] container: The container name to stamp on each item.
     :returns: A tuple of next marker and a list of BlobProperties.
     :rtype: Tuple[Optional[str], List[~azure.storage.blob.BlobProperties]]

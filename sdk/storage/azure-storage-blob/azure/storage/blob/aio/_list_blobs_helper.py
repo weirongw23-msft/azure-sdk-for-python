@@ -256,14 +256,9 @@ class ArrowBlobPropertiesPaged(BlobPropertiesPaged):
         location_mode = getattr(pipeline_response.http_response, "location_mode", None)
         # The response is Arrow only when the service returns the Arrow stream media type.
         if _ARROW_CONTENT_TYPE in content_type:
-            chunks = []
-            if hasattr(deserialized, "__aiter__"):
-                async for chunk in deserialized:
-                    chunks.append(chunk)
-            else:
-                for chunk in deserialized:
-                    chunks.append(chunk)
-            raw_bytes = b"".join(chunks)
+            raw_bytes = bytearray()
+            async for chunk in deserialized:
+                raw_bytes += chunk
             next_marker, blob_items = _parse_arrow_response(raw_bytes, self.container)
             self._arrow_response = (next_marker, blob_items)
             return location_mode, raw_bytes
@@ -284,9 +279,7 @@ class ArrowBlobPropertiesPaged(BlobPropertiesPaged):
                 cls=self._arrow_cls,
                 use_location=self.location_mode,
             )
-            if inspect.isawaitable(result):
-                return await result
-            return result
+            return await result
         except HttpResponseError as error:
             process_storage_error(error)
 
