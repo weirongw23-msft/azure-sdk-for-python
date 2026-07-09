@@ -474,6 +474,9 @@ class FilteredBlobPaged(PageIterator):
 class ArrowBlobPropertiesPaged(BlobPropertiesPaged):
     """A PageIterator that deserializes Apache Arrow IPC responses from list-blobs operations."""
 
+    # The response type used to deserialize an XML fallback response.
+    _xml_response_type = "ListBlobsFlatSegmentResponse"
+
     def __init__(self, *args: Any, deserializer: Any = None, **kwargs: Any) -> None:
         super().__init__(*args, **kwargs)
         self._deserializer = deserializer
@@ -502,7 +505,7 @@ class ArrowBlobPropertiesPaged(BlobPropertiesPaged):
             return location_mode, raw_bytes
         if hasattr(pipeline_response.http_response, "read"):
             pipeline_response.http_response.read()
-        xml_response = self._deserializer("ListBlobsFlatSegmentResponse", pipeline_response.http_response)
+        xml_response = self._deserializer(self._xml_response_type, pipeline_response.http_response)
         self._arrow_response = None
         return location_mode, xml_response
 
@@ -518,7 +521,57 @@ class ArrowBlobPropertiesPaged(BlobPropertiesPaged):
 class ArrowBlobPrefixPaged(ArrowBlobPropertiesPaged):
     """Arrow-backed PageIterator for walk_blobs."""
 
+    _xml_response_type = "ListBlobsHierarchySegmentResponse"
+
     def __init__(self, *args: Any, **kwargs: Any) -> None:
         super().__init__(*args, **kwargs)
         self.name = self.prefix
         self.delimiter: Optional[str] = kwargs.get("delimiter")
+
+    def _extract_data_cb(self, get_next_return):
+        # Arrow responses only carry blob items; defer to the base class for those.
+        if self._arrow_response is not None:
+            return super()._extract_data_cb(get_next_return)
+        # XML fallback: reuse the base to populate the response, then preserve the
+        # hierarchy's virtual directories (BlobPrefix) alongside the blobs.
+        next_marker, _ = super()._extract_data_cb(get_next_return)
+        self.current_page = self._response.segment.blob_prefixes + self._response.segment.blob_items
+        self.current_page = [self._build_item(item) for item in self.current_page]
+        self.delimiter = self._response.delimiter
+        return next_marker, self.current_page
+
+    def _build_item(self, item):
+        item = super()._build_item(item)
+        if isinstance(item, GenBlobPrefix):
+            if item.name.encoded:
+                name = unquote(item.name.content)
+            else:
+                name = item.name.content
+            return ArrowBlobPrefix(
+                self._command,
+                container=self.container,
+                prefix=name,
+                results_per_page=self.results_per_page,
+                location_mode=self.location_mode,
+                delimiter=self.delimiter,
+                deserializer=self._deserializer,
+            )
+        return item
+
+
+class ArrowBlobPrefix(BlobPrefix):
+    """An Arrow-backed virtual blob directory returned from walk_blobs.
+
+    Drilling into this prefix re-lists using the Apache Arrow operation, so nested pages
+    are parsed the same way (Arrow when available, XML otherwise)."""
+
+    def __init__(self, *args: Any, **kwargs: Any) -> None:
+        super(BlobPrefix, self).__init__(  # pylint: disable=bad-super-call
+            *args, page_iterator_class=ArrowBlobPrefixPaged, **kwargs
+        )
+        self.name = kwargs.get("prefix")  # type: ignore [assignment]
+        self.prefix = kwargs.get("prefix")  # type: ignore [assignment]
+        self.results_per_page = kwargs.get("results_per_page")
+        self.container = kwargs.get("container")  # type: ignore [assignment]
+        self.delimiter = kwargs.get("delimiter")  # type: ignore [assignment]
+        self.location_mode = kwargs.get("location_mode")  # type: ignore [assignment]
