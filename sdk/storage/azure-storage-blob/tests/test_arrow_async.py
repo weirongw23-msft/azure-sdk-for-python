@@ -144,6 +144,24 @@ class TestStorageApacheArrowAsync(AsyncStorageRecordedTestCase):
         all_names = {blob.name for blob in blobs_list}
         for blob_name in blob_names:
             assert blob_name in all_names
+        for blob in blobs_list:
+            # BlobPrefix (virtual directory) entries from walk_blobs carry only a name.
+            if not isinstance(blob, BlobProperties):
+                continue
+            # Validate that many fields (not just the name) survive Arrow deserialization.
+            assert blob.blob_type == BlobType.BLOCKBLOB
+            assert blob.size == len(TEST_DATA)
+            assert blob.etag is not None
+            assert blob.last_modified is not None
+            assert blob.creation_time is not None
+            assert blob.last_accessed_on is not None
+            assert blob.server_encrypted is True
+            assert blob.blob_tier is not None
+            assert blob.blob_tier_inferred is not None
+            assert blob.lease.state == "available"
+            assert blob.lease.status == "unlocked"
+            assert blob.content_settings.content_type == "application/octet-stream"
+            assert blob.content_settings.content_md5 is not None
 
     def verify_all_fields(self, blob: BlobProperties):
         # Verifies the properties produced by _rich_blob_xml were fully deserialized.

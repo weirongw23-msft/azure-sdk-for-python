@@ -51,6 +51,7 @@ def _parse_arrow_response(  # pylint: disable=too-many-locals
     from nanoarrow.ipc import InputStream  # pylint: disable=import-outside-toplevel
 
     # Declarative mapping: Arrow column name -> (BlobProperties attr, default value).
+    # Arrow column names mirror the List Blobs XML element names (e.g. "Last-Modified").
     # Only scalar fields that map 1-to-1 are listed here; composite sub-objects are
     # handled separately below.
     _SCALAR_FIELDS: List[Tuple[str, str, Any]] = [
@@ -60,9 +61,9 @@ def _parse_arrow_response(  # pylint: disable=too-many-locals
         ("IsCurrentVersion", "is_current_version", None),
         ("Etag", "etag", None),
         ("Deleted", "deleted", False),
-        ("LastModified", "last_modified", None),
-        ("CreationTime", "creation_time", None),
-        ("ContentLength", "size", None),
+        ("Last-Modified", "last_modified", None),
+        ("Creation-Time", "creation_time", None),
+        ("Content-Length", "size", None),
         ("ServerEncrypted", "server_encrypted", False),
         ("EncryptionScope", "encryption_scope", None),
         ("DeletedTime", "deleted_time", None),
@@ -74,8 +75,8 @@ def _parse_arrow_response(  # pylint: disable=too-many-locals
         ("AccessTierInferred", "blob_tier_inferred", None),
         ("ArchiveStatus", "archive_status", None),
         ("BlobSequenceNumber", "page_blob_sequence_number", None),
-        ("IsSealed", "is_append_blob_sealed", None),
-        ("LastAccessedOn", "last_accessed_on", None),
+        ("Sealed", "is_append_blob_sealed", None),
+        ("LastAccessTime", "last_accessed_on", None),
         ("TagCount", "tag_count", None),
         ("HasVersionsOnly", "has_versions_only", None),
         ("LegalHold", "has_legal_hold", None),
@@ -84,12 +85,12 @@ def _parse_arrow_response(  # pylint: disable=too-many-locals
 
     # Sub-object field mappings: Arrow column name -> constructor kwarg name.
     _CONTENT_SETTINGS_FIELDS = {
-        "ContentType": "content_type",
-        "ContentEncoding": "content_encoding",
-        "ContentLanguage": "content_language",
-        "ContentMD5": "content_md5",
-        "ContentDisposition": "content_disposition",
-        "CacheControl": "cache_control",
+        "Content-Type": "content_type",
+        "Content-Encoding": "content_encoding",
+        "Content-Language": "content_language",
+        "Content-MD5": "content_md5",
+        "Content-Disposition": "content_disposition",
+        "Cache-Control": "cache_control",
     }
     _LEASE_FIELDS = {
         "LeaseStatus": "x-ms-lease-status",
