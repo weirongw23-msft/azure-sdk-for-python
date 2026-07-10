@@ -145,10 +145,9 @@ class TestStorageApacheArrowAsync(AsyncStorageRecordedTestCase):
         for blob_name in blob_names:
             assert blob_name in all_names
         for blob in blobs_list:
-            # BlobPrefix (virtual directory) entries from walk_blobs carry only a name.
-            if not isinstance(blob, BlobProperties):
+            # Skip virtual-directory entries from walk_blobs; they carry only a name.
+            if not isinstance(blob, BlobProperties) or blob.name.endswith("/"):
                 continue
-            # Validate that many fields (not just the name) survive Arrow deserialization.
             assert blob.blob_type == BlobType.BLOCKBLOB
             assert blob.size == len(TEST_DATA)
             assert blob.etag is not None

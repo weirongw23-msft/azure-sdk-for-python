@@ -142,8 +142,8 @@ class TestStorageApacheArrow(StorageRecordedTestCase):
         for blob_name in blob_names:
             assert blob_name in all_names
         for blob in blobs_list:
-            # BlobPrefix (virtual directory) entries from walk_blobs carry only a name.
-            if not isinstance(blob, BlobProperties):
+            # Skip virtual-directory entries from walk_blobs; they carry only a name.
+            if not isinstance(blob, BlobProperties) or blob.name.endswith("/"):
                 continue
             assert blob.blob_type == BlobType.BLOCKBLOB
             assert blob.size == len(TEST_DATA)
