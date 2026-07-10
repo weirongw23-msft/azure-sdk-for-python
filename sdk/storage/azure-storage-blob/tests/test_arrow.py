@@ -210,6 +210,26 @@ class TestStorageApacheArrow(StorageRecordedTestCase):
 
     @BlobPreparer()
     @recorded_by_proxy
+    def test_arrow_list_blobs_with_metadata_and_tags(self, **kwargs):
+        storage_account_name = kwargs.pop("storage_account_name")
+        storage_account_key = kwargs.pop("storage_account_key")
+
+        self._setup(storage_account_name, storage_account_key)
+        metadata = {"color": "blue", "size": "large"}
+        tags = {"tag1": "firsttag", "tag2": "secondtag"}
+        blob_client = self.bsc.get_blob_client(self.container_name, "blob1")
+        blob_client.upload_blob(TEST_DATA, overwrite=True, metadata=metadata, tags=tags)
+
+        container = self.bsc.get_container_client(self.container_name)
+        blobs_list = list(container.list_blobs(response_format="arrow", include=["metadata", "tags"]))
+
+        self.verify_blobs(blobs_list, ["blob1"])
+        blob = blobs_list[0]
+        assert blob.metadata == metadata
+        assert blob.tags == tags
+
+    @BlobPreparer()
+    @recorded_by_proxy
     def test_arrow_list_blobs_paging(self, **kwargs):
         storage_account_name = kwargs.pop("storage_account_name")
         storage_account_key = kwargs.pop("storage_account_key")

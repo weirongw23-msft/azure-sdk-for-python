@@ -35,7 +35,7 @@ from ._shared.response_handlers import process_storage_error, return_context_and
 _ARROW_CONTENT_TYPE = "application/vnd.apache.arrow.stream"
 
 
-def _parse_arrow_response(  # pylint: disable=too-many-locals
+def _parse_arrow_response(  # pylint: disable=too-many-locals,too-many-statements
     raw_bytes: Union[bytes, bytearray], container: Optional[str]
 ) -> Tuple[Optional[str], List[BlobProperties]]:
     """
@@ -130,8 +130,19 @@ def _parse_arrow_response(  # pylint: disable=too-many-locals
             num_rows = len(batch)
             if num_rows == 0:
                 continue
-            # Pre-resolve columns once per batch; missing columns stay as None.
-            cols = {field_names[i]: batch.child(i).to_pylist() for i in range(batch.n_children)}
+            cols = {}
+            for i in range(batch.n_children):
+                child = batch.child(i)
+                try:
+                    cols[field_names[i]] = child.to_pylist()
+                except KeyError:
+                    offsets = list(child.buffer(1))
+                    entries = child.child(0)
+                    keys = entries.child(0).to_pylist()
+                    values = entries.child(1).to_pylist()
+                    cols[field_names[i]] = [
+                        {keys[j]: values[j] for j in range(offsets[r], offsets[r + 1])} for r in range(num_rows)
+                    ]
 
             for row in range(num_rows):
 
@@ -166,6 +177,15 @@ def _parse_arrow_response(  # pylint: disable=too-many-locals
                     expiry_time=_get("ImmutabilityPolicyUntilDate"),
                     policy_mode=_get("ImmutabilityPolicyMode"),
                 )
+
+                # Metadata and tags are returned as their own map-typed columns when the
+                # caller opts in via ``include``. They are absent otherwise.
+                metadata_val = _get("Metadata")
+                if isinstance(metadata_val, dict):
+                    blob.metadata = metadata_val  # type: ignore[assignment]
+                tags_val = _get("Tags", _get("BlobTags"))
+                if isinstance(tags_val, dict):
+                    blob.tags = tags_val
                 blob_items.append(blob)
 
     return next_marker, blob_items
